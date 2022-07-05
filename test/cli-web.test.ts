@@ -1,4 +1,4 @@
-import * as cliweb from '../src'
+import * as cliweb from '../src/cli-web'
 describe('cli-web', () => {
   // verify
   test('verify', () => {

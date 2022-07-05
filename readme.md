@@ -15,6 +15,6 @@ import {*} as cliweb from 'cli-web.js'
 const i = new RichTerminal(new Terminal(document.getElementById('test')))
 ```
 
-### 方法说明
-#### [Terminal](./doc/terminal.md)
-#### [RichTerminal](./doc/richterminal.md)
+## 方法说明
+### [Terminal](./doc/terminal.md)
+### [RichTerminal](./doc/richterminal.md)
