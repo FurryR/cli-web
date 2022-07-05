@@ -82,7 +82,7 @@ export class Terminal {
     });
     this.obj = obj;
     this.obj.appendChild(this.input);
-    this.obj.onfocus = (): void => this.input.focus();
+    this.obj.addEventListener('focus', (): void => this.input.focus());
     this.rejectLast = (): void => void null;
     this.resolveLast = (): void => void null;
   }
