@@ -5,7 +5,7 @@
 
 ```shell
 git clone https://github.com/FurryR/cli-web.git && cd cli-web
-npm build
+npm run build
 ```
 
 ### ES6
