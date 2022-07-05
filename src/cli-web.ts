@@ -51,33 +51,33 @@ export class Terminal {
     [this.lock, this.buffer, this.input] = [
       false,
       [],
-      (this.input = document.createElement("input")),
+      (this.input = document.createElement('input')),
     ];
     this.input.style.opacity =
       this.input.style.width =
       this.input.style.height =
-        "0";
-    this.input.title = this.input.placeholder = "Cli-Web";
-    this.input.addEventListener("compositionstart", (): void => {
+        '0';
+    this.input.title = this.input.placeholder = 'Cli-Web';
+    this.input.addEventListener('compositionstart', (): void => {
       this.lock = true;
     });
-    this.input.addEventListener("compositionend", (): void => {
+    this.input.addEventListener('compositionend', (): void => {
       this.lock = false;
-      this.input.dispatchEvent(new InputEvent("input"));
+      this.input.dispatchEvent(new InputEvent('input'));
     });
-    this.input.addEventListener("keydown", (ev: KeyboardEvent): boolean => {
+    this.input.addEventListener('keydown', (ev: KeyboardEvent): boolean => {
       if (ev.key.length > 1) {
         this.resolveLast(ev.key);
         return false;
       }
       return true;
     });
-    this.input.addEventListener("input", (): void => {
+    this.input.addEventListener('input', (): void => {
       if (!this.lock) {
         if (this.input.value.length > 1)
           this.buffer.push(...this.input.value.slice(1));
         this.resolveLast(this.input.value.slice(0, 1));
-        this.input.value = "";
+        this.input.value = '';
       }
     });
     this.obj = obj;
@@ -97,7 +97,7 @@ export class RichTerminal {
   private term_buffer: HTMLElement[];
   private _cursor: number;
   private span(text: string): HTMLSpanElement {
-    const d: HTMLSpanElement = document.createElement("span");
+    const d: HTMLSpanElement = document.createElement('span');
     d.appendChild(document.createTextNode(text));
     return d;
   }
@@ -106,8 +106,8 @@ export class RichTerminal {
       this.term_buffer[this.cursor] = elem;
       this.cursor++;
     } else {
-      if (elem == "\n")
-        this.term_buffer[this.cursor] = document.createElement("br");
+      if (elem == '\n')
+        this.term_buffer[this.cursor] = document.createElement('br');
       else this.term_buffer[this.cursor] = this.span(elem);
       this.cursor++;
     }
@@ -176,45 +176,45 @@ export class RichTerminal {
     const updateStr: (
       buffer: HTMLElement[],
       pos: number,
-      str: string[]
+      str: string[],
     ) => HTMLElement[] = (
       buffer: HTMLElement[],
       pos: number,
-      str: string[]
+      str: string[],
     ): HTMLElement[] => {
       const d: HTMLElement[] = [...buffer.slice(0, pos)];
       for (const val of str) d.push(this.span(val));
       return d;
     };
     const cursor_temp: number = this.cursor;
-    let fin = "",
+    let fin = '',
       cursor = 0;
     for (;;) {
       const i: string = await this.getch();
       switch (i) {
-        case "ArrowLeft": {
+        case 'ArrowLeft': {
           if (cursor > 0) cursor--;
           break;
         }
-        case "ArrowRight": {
+        case 'ArrowRight': {
           if (cursor < fin.length) cursor++;
           break;
         }
-        case "Backspace": {
+        case 'Backspace': {
           if (cursor > 0) {
             fin = fin.slice(0, cursor - 1) + fin.slice(cursor--);
             this.term_buffer = updateStr(
               this.term_buffer,
               (this.cursor = cursor_temp),
-              Array.from(fin)
+              Array.from(fin),
             );
             this.obj.setContent(this.term_buffer);
           }
           break;
         }
-        case "Enter": {
+        case 'Enter': {
           this.cursor = this.length;
-          this.write("\n");
+          this.write('\n');
           return fin;
         }
         default: {
@@ -223,7 +223,7 @@ export class RichTerminal {
             this.term_buffer = updateStr(
               this.term_buffer,
               (this.cursor = cursor_temp),
-              Array.from(fin)
+              Array.from(fin),
             );
             this.obj.setContent(this.term_buffer);
           }
