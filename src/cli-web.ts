@@ -84,7 +84,8 @@ export class Terminal {
     // 多语言支持/输入法选字结束
     this.input.addEventListener('compositionend', (): void => {
       this.inputlock = false
-      this.input.dispatchEvent(new InputEvent('input')) // 触发input事件
+      if (this.input.value != '')
+        this.input.dispatchEvent(new InputEvent('input')) // 触发input事件
     })
     // 功能键
     this.input.addEventListener('keydown', (ev: KeyboardEvent): boolean => {
