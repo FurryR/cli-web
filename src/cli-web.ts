@@ -2,6 +2,7 @@
  * This program was under the MIT license.
  * Copyright(c) FurryR 2022.
  */
+
 /**
  * Terminal 类。
  * 基本终端实现。
@@ -9,15 +10,18 @@
 export class Terminal {
   private obj: HTMLElement
   private input: HTMLInputElement
-  private buffer: string[]
-  private inputlock: boolean
+  private buffer: string[] = []
+  private inputlock = false
   private span(text: string): HTMLSpanElement {
     const d: HTMLSpanElement = document.createElement('span')
     d.appendChild(new Text(text))
     return d
   }
-  private rejectLast: () => void
-  private resolveLast: (val: string) => void
+  private resolve: ((val: string) => void)[] = []
+  private ret(val: string): void {
+    this.resolve[0](val)
+    this.resolve = this.resolve.slice(1)
+  }
   /**
    * 设定 Terminal 的内容。
    * @param elem 要写入的内容。
@@ -25,7 +29,7 @@ export class Terminal {
   setContent(elem: (string | HTMLElement)[]): void {
     while (this.obj.children.length != 1)
       this.obj.removeChild(this.obj.children[0])
-    let temp: string = ''
+    let temp = ''
     const f: DocumentFragment = new DocumentFragment()
     elem.forEach((obj: string | HTMLElement): void => {
       if (obj instanceof HTMLElement) {
@@ -44,18 +48,13 @@ export class Terminal {
    * @returns 用于获得用户输入内容的 Promise。
    */
   getch(): Promise<string> {
-    this.rejectLast()
-    return new Promise<string>((resolve, reject): void => {
+    return new Promise<string>((resolve): void => {
       if (this.buffer.length != 0) {
         resolve(this.buffer[0])
         this.buffer = this.buffer.slice(1)
         return
       }
-      this.resolveLast = (val: string): void => {
-        this.rejectLast = this.resolveLast = (): void => void null
-        resolve(val)
-      }
-      this.rejectLast = reject
+      this.resolve.push((val: string): void => resolve(val))
     })
   }
   /**
@@ -64,64 +63,63 @@ export class Terminal {
    */
   constructor(obj: HTMLElement) {
     // 初始化。
-    ;[this.inputlock, this.buffer, this.input, this.obj] = [
-      false,
-      [],
-      document.createElement('input'),
+    ;[this.obj, this.input] = [
       obj,
+      ((val: HTMLInputElement): HTMLInputElement => {
+        // 设定input的样式。
+        val.style.opacity = val.style.width = val.style.height = '0'
+        // 允许辅助功能锁定此元素。
+        val.title = val.placeholder = 'Cli-Web'
+        // 多语言支持/输入法选字开始处理
+        val.addEventListener(
+          'compositionstart',
+          (): void => void (this.inputlock = true)
+        )
+        // 多语言支持/输入法选字结束处理
+        val.addEventListener('compositionend', (): void => {
+          this.inputlock = false
+          /**
+           * compositionend会在input事件的前后不定触发，此句确保了:
+           * - 若input事件在compositionend后触发，则此事件仅用于重置输入锁。事件执行顺序:compositionend->input(由compositionend触发)->input(由浏览器触发,无效)
+           * - 若input事件在compositionend前触发，则此事件会先重置输入锁，然后第二次触发input事件。事件执行顺序：input(由浏览器触发,无效)->compositionend->input(由compositionend触发)
+           * 即，此事件确保了实际的input一定会在compositionend后触发。
+           */
+          if (val.value != '') val.dispatchEvent(new InputEvent('input')) // 兼容性/触发输入事件
+        })
+        // 功能键处理
+        val.addEventListener('keydown', (ev: KeyboardEvent): boolean => {
+          if (ev.key.length > 1) {
+            this.ret(ev.key)
+            return false
+          }
+          return true
+        })
+        // 输入事件处理
+        val.addEventListener('input', (): void => {
+          if (!this.inputlock) {
+            if (val.value.length > 1) this.buffer.push(...val.value.slice(1))
+            this.ret(val.value[0])
+            val.value = ''
+          }
+        })
+        return val
+      })(document.createElement('input'))
     ]
-    // 设定虚拟输入的样式。
-    this.input.style.opacity =
-      this.input.style.width =
-      this.input.style.height =
-        '0'
-    // 允许辅助功能锁定此元素。
-    this.input.title = this.input.placeholder = 'Cli-Web'
-    // 多语言支持/输入法选字开始
-    this.input.addEventListener('compositionstart', (): void => {
-      this.inputlock = true
-    })
-    // 多语言支持/输入法选字结束
-    this.input.addEventListener('compositionend', (): void => {
-      this.inputlock = false
-      if (this.input.value != '')
-        this.input.dispatchEvent(new InputEvent('input')) // 触发input事件
-    })
-    // 功能键
-    this.input.addEventListener('keydown', (ev: KeyboardEvent): boolean => {
-      if (ev.key.length > 1) {
-        this.resolveLast(ev.key)
-        return false
-      }
-      return true
-    })
-    // 输入事件
-    this.input.addEventListener('input', (): void => {
-      if (!this.inputlock) {
-        if (this.input.value.length > 1)
-          this.buffer.push(...this.input.value.slice(1))
-        this.resolveLast(this.input.value[0])
-        this.input.value = ''
-      }
-    })
-    // 无论如何，this.input应为最后一个元素。
+    // 追加input为最后一个元素。
     this.obj.appendChild(this.input)
-    this.obj.addEventListener('focus', (): void => {
-      this.input.focus()
-    })
-    this.rejectLast = (): void => void null
-    this.resolveLast = (): void => void null
+    // 自动聚焦。
+    this.obj.addEventListener('click', (): void => this.input.focus())
   }
 }
 /**
  * RichTerminal 类。
- * 更好的Terminal包装。
- * 注意：RichTerminal和Terminal不应并用。
+ * 更好的 Terminal 包装。
+ * 注意:RichTerminal 和 Terminal 不应并用。
  */
 export class RichTerminal {
   private obj: Terminal
-  private term_buffer: (HTMLElement | string)[]
-  private _cursor: number
+  private term_buffer: (HTMLElement | string)[] = []
+  private _cursor = 0
   private putchar(elem: HTMLElement | string): void {
     if (elem instanceof HTMLElement) {
       this.term_buffer[this.cursor] = elem
@@ -156,15 +154,15 @@ export class RichTerminal {
    * 清除 Terminal 的内容。
    */
   clear(): void {
-    ;[this.term_buffer, this.cursor] = [[], 0]
+    this.cursor = (this.term_buffer = []).length
     this.obj.setContent(this.term_buffer)
   }
   /**
    * 对 Terminal setContent 的包装。
    * @param elem 要写入的内容。
    */
-  setContent(elem: HTMLElement[]) {
-    ;[this.term_buffer, this.cursor] = [elem, elem.length]
+  setContent(elem: HTMLElement[]): void {
+    this.cursor = (this.term_buffer = elem).length
     this.obj.setContent(elem)
   }
   /**
@@ -192,14 +190,12 @@ export class RichTerminal {
    * 获得一行文字，不带换行。回显。
    */
   async getline(): Promise<string> {
-    const updateStr = (
+    function updateStr(
       buffer: (string | HTMLElement)[],
       pos: number,
-      str: string[],
-    ): (string | HTMLElement)[] => {
-      const d: (string | HTMLElement)[] = [...buffer.slice(0, pos)]
-      for (const val of str) d.push(val)
-      return d
+      str: string[]
+    ): (string | HTMLElement)[] {
+      return [...buffer.slice(0, pos), ...str]
     }
     const cursor_temp: number = this.cursor
     let fin = '',
@@ -221,7 +217,7 @@ export class RichTerminal {
             this.term_buffer = updateStr(
               this.term_buffer,
               (this.cursor = cursor_temp),
-              Array.from(fin),
+              Array.from(fin)
             )
             this.obj.setContent(this.term_buffer)
           }
@@ -238,7 +234,7 @@ export class RichTerminal {
             this.term_buffer = updateStr(
               this.term_buffer,
               (this.cursor = cursor_temp),
-              Array.from(fin),
+              Array.from(fin)
             )
             this.obj.setContent(this.term_buffer)
           }
@@ -251,6 +247,6 @@ export class RichTerminal {
    * @param obj 目标 Terminal。
    */
   constructor(obj: Terminal) {
-    ;[this.obj, this._cursor, this.term_buffer] = [obj, 0, []]
+    this.obj = obj
   }
 }
