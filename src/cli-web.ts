@@ -19,8 +19,10 @@ export class Terminal {
   }
   private resolve: ((val: string) => void)[] = []
   private ret(val: string): void {
-    this.resolve[0](val)
-    this.resolve = this.resolve.slice(1)
+    if (this.resolve.length > 0) {
+      this.resolve[0](val)
+      this.resolve = this.resolve.slice(1)
+    } else this.buffer.push(val)
   }
   /**
    * 设定 Terminal 的内容。
