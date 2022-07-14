@@ -3,5 +3,6 @@
   "prettier.semi": false,
   "prettier.singleQuote": true,
   "prettier.endOfLine": "auto",
-  "prettier.trailingComma": "none"
+  "prettier.trailingComma": "none",
+  "files.eol": "\n"
 }

@@ -1,6 +1,7 @@
 # Web-Cli
 
-一个运行在前端的，基于DOM的终端。
+一个运行在前端的，基于 DOM 的终端。
+
 ## 使用方式
 
 ```shell
@@ -16,5 +17,7 @@ const i = new RichTerminal(new Terminal(document.getElementById('test')))
 ```
 
 ## 方法说明
+
 ### [Terminal](./doc/terminal.md)
+
 ### [RichTerminal](./doc/richterminal.md)
