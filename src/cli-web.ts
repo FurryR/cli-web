@@ -65,7 +65,7 @@ export class Terminal {
    */
   constructor(obj: HTMLElement) {
     // 初始化。
-    ;[this.obj, this.input] = [
+    void ([this.obj, this.input] = [
       obj,
       ((val: HTMLInputElement): HTMLInputElement => {
         // 设定input的样式。
@@ -106,7 +106,7 @@ export class Terminal {
         })
         return val
       })(document.createElement('input'))
-    ]
+    ])
     // 追加input为最后一个元素。
     this.obj.appendChild(this.input)
     // 自动聚焦。
