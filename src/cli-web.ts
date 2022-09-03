@@ -27,6 +27,7 @@ export class Terminal {
       }
     }
     if (tmp != '') d.appendChild(new Text(tmp))
+    d.innerHTML += ''
     return d
   }
   private resolve: ((val: string) => void)[] = []
