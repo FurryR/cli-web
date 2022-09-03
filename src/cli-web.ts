@@ -14,13 +14,19 @@ export class Terminal {
   private inputlock = false
   private span(text: string): HTMLSpanElement {
     const d: HTMLSpanElement = document.createElement('span')
+    let tmp = ''
     for (const char of text) {
       if (char != ' ') {
-        d.appendChild(new Text(char))
+        tmp += char
       } else {
+        if (tmp != '') {
+          d.appendChild(new Text(tmp))
+          tmp = ''
+        }
         d.innerHTML += '&nbsp;'
       }
     }
+    if (tmp != '') d.appendChild(new Text(tmp))
     return d
   }
   private resolve: ((val: string) => void)[] = []
